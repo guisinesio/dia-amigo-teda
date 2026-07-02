@@ -119,8 +119,7 @@ function BubblePill({ msg, onClick }: { msg: MuralMessage; onClick: () => void }
   return (
     <motion.button
       onClick={onClick}
-      className="absolute cursor-pointer"
-      style={{ left: 0, top: 0 }} // posicionamento via wrapper
+      className="cursor-pointer"
       animate={{
         y: [0, -floatY, 0],
         rotate: [0, rotate, 0],
