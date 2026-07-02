@@ -46,27 +46,37 @@ function formatDate(iso: string) {
   } catch { return ""; }
 }
 
-// Grade com jitter para distribuição orgânica
-// mobile: 2 colunas, max-left 60% para caber pílulas de ~140px em 375px
-// desktop: 4 colunas, max-left 78%
 function generatePositions(count: number, mobile = false) {
-  const cols = mobile ? 2 : 4;
-  const rows = mobile ? 8 : 4;
-  const cellW = 100 / cols;
-  const cellH = 100 / rows;
-  const maxLeft = mobile ? 52 : 78;
-  const positions: { left: number; top: number }[] = [];
-  for (let i = 0; i < count; i++) {
+  if (mobile) {
+    // Mobile: 2 colunas fixas (6% e 52%) com jitter pequeno em X e variação em Y.
+    // Evita o clamping que ocorria quando cellW=50 jogava col=1 acima de maxLeft.
+    // Pílula ~130px em 375px = ~35%; col1 a 52% termina em 87% — dentro da tela.
+    const totalRows = Math.ceil(count / 2);
+    const cellH = 82 / Math.max(totalRows, 4);
+    return Array.from({ length: count }, (_, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const jitterX = Math.sin(i * 3.7) * 4;
+      const jitterY = (Math.cos(i * 5.1) * 0.25 + 0.5) * cellH;
+      return {
+        left: Math.max(2, (col === 0 ? 6 : 52) + jitterX),
+        top: Math.min(85, Math.max(2, row * cellH + jitterY)),
+      };
+    });
+  }
+  // Desktop: 4 colunas com jitter orgânico
+  const cols = 4, rows = 4;
+  const cellW = 100 / cols, cellH = 100 / rows;
+  return Array.from({ length: count }, (_, i) => {
     const col = i % cols;
     const row = Math.floor(i / cols) % rows;
     const jitterX = (Math.sin(i * 7.3) * 0.20 + 0.37) * cellW;
     const jitterY = (Math.cos(i * 5.1) * 0.20 + 0.37) * cellH;
-    positions.push({
-      left: Math.min(maxLeft, Math.max(2, col * cellW + jitterX)),
+    return {
+      left: Math.min(78, Math.max(2, col * cellW + jitterX)),
       top: Math.min(88, Math.max(2, row * cellH + jitterY)),
-    });
-  }
-  return positions;
+    };
+  });
 }
 
 // Avatar individual — foto com fallback para iniciais
@@ -124,7 +134,7 @@ function BubblePill({ msg, onClick }: { msg: MuralMessage; onClick: () => void }
       title={`De ${msg.remetenteNome} para ${msg.destinatarioNome}`}
     >
       <div
-        className="flex items-center gap-2 rounded-full px-3 py-2 shadow-lg"
+        className="flex items-center gap-2 rounded-full px-3 py-2 shadow-lg overflow-hidden"
         style={{ background: `linear-gradient(135deg, ${color.from}, ${color.to})` }}
       >
         <Avatar fotoId={msg.remetenteFotoId} name={msg.remetenteNome} size={40} />
