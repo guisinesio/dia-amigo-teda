@@ -71,6 +71,9 @@ function routeAction_(action, body) {
     case "colaboradores.updateFoto":
       return updateFotoColaborador_(body.matricula, body.fotoUrl);
 
+    case "admin.colaboradores":
+      return listColaboradoresAdmin_(body.matricula);
+
     case "mensagens.mural":
       return listMural_();
 
