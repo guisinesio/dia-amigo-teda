@@ -47,20 +47,23 @@ function formatDate(iso: string) {
 }
 
 // Grade com jitter para distribuição orgânica
-function generatePositions(count: number) {
-  const cols = 4;
-  const rows = 4;
+// mobile: 2 colunas, max-left 60% para caber pílulas de ~140px em 375px
+// desktop: 4 colunas, max-left 78%
+function generatePositions(count: number, mobile = false) {
+  const cols = mobile ? 2 : 4;
+  const rows = mobile ? 8 : 4;
   const cellW = 100 / cols;
   const cellH = 100 / rows;
+  const maxLeft = mobile ? 52 : 78;
   const positions: { left: number; top: number }[] = [];
   for (let i = 0; i < count; i++) {
     const col = i % cols;
     const row = Math.floor(i / cols) % rows;
-    const jitterX = (Math.sin(i * 7.3) * 0.25 + 0.37) * cellW;
-    const jitterY = (Math.cos(i * 5.1) * 0.25 + 0.37) * cellH;
+    const jitterX = (Math.sin(i * 7.3) * 0.20 + 0.37) * cellW;
+    const jitterY = (Math.cos(i * 5.1) * 0.20 + 0.37) * cellH;
     positions.push({
-      left: Math.min(78, Math.max(2, col * cellW + jitterX)),
-      top: Math.min(80, Math.max(4, row * cellH + jitterY)),
+      left: Math.min(maxLeft, Math.max(2, col * cellW + jitterX)),
+      top: Math.min(88, Math.max(2, row * cellH + jitterY)),
     });
   }
   return positions;
@@ -137,6 +140,15 @@ export default function MuralPage() {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<MuralMessage | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(max-width: 640px)");
+    setIsMobile(mq.matches);
+    const handler = (e: MediaQueryListEvent) => setIsMobile(e.matches);
+    mq.addEventListener("change", handler);
+    return () => mq.removeEventListener("change", handler);
+  }, []);
 
   const fetch_ = useCallback(async () => {
     setLoading(true);
@@ -151,7 +163,7 @@ export default function MuralPage() {
 
   const visible = all.slice(0, page * BUBBLES_PER_PAGE);
   const hasMore = visible.length < all.length;
-  const positions = generatePositions(visible.length);
+  const positions = generatePositions(visible.length, isMobile);
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -244,19 +256,19 @@ export default function MuralPage() {
           >
             <motion.div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setSelected(null)} />
             <motion.div
-              className="relative z-10 mx-4 mb-4 w-full max-w-md overflow-hidden rounded-2xl bg-paper shadow-[var(--shadow-letter)] sm:mb-0"
+              className="relative z-10 mx-4 mb-4 w-full max-w-md flex flex-col rounded-2xl bg-paper shadow-[var(--shadow-letter)] sm:mb-0"
+              style={{ maxHeight: "85vh" }}
               initial={{ opacity: 0, y: 60, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300, damping: 28 }}
             >
-              {/* Header */}
+              {/* Header — fixo no topo do modal */}
               <div
-                className="px-5 py-4"
+                className="flex-shrink-0 rounded-t-2xl px-5 py-4"
                 style={{ background: `linear-gradient(135deg, ${colorFor(selected.id).from}, ${colorFor(selected.id).to})` }}
               >
                 <div className="flex items-center justify-between">
-                  {/* Avatares DE → PARA */}
                   <div className="flex items-center gap-3">
                     <div className="flex items-center gap-2">
                       <div className="flex flex-col items-center gap-1">
@@ -283,8 +295,8 @@ export default function MuralPage() {
                 </div>
               </div>
 
-              {/* Conteúdo */}
-              <div className="p-5">
+              {/* Conteúdo — rolável quando necessário */}
+              <div className="overflow-y-auto p-5">
                 <p className="font-serif text-[15px] leading-relaxed text-ink">{selected.texto}</p>
 
                 {selected.imagemDriveId && (
