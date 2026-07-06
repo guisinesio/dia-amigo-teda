@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
       remetenteMatricula: session.matricula,
       destinatarioMatricula: body.destinatarioMatricula,
       texto: body.texto.trim(),
-      imagemDriveId: body.imagemBase64 ? undefined : null,
+      imagemDriveId: body.imagemDriveId ?? null,
       videoYoutubeId: body.videoYoutubeId ?? null,
     },
   });

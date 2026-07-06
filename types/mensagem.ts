@@ -19,6 +19,6 @@ export type TipoReacao = "coracao" | "sorriso" | "palmas" | "emocionado";
 export interface NovaMensagemInput {
   destinatarioMatricula: string;
   texto: string;
-  imagemBase64?: string | null;
+  imagemDriveId?: string | null;
   videoYoutubeId?: string | null;
 }

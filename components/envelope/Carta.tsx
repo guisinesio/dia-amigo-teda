@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Heart } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
@@ -18,6 +19,8 @@ interface CartaProps {
 export function Carta({ mensagem, onReact, onFavorite, isFavorita, isDestinatario }: CartaProps) {
   const fotoUrl = driveImageUrl(mensagem.imagemDriveId);
   const remetenteFotoUrl = driveImageUrl(mensagem.remetenteFotoDriveId);
+  const [imagemAberta, setImagemAberta] = useState(false);
+
 
   const dataFormatada = new Intl.DateTimeFormat("pt-BR", {
     day: "2-digit",
@@ -39,103 +42,126 @@ export function Carta({ mensagem, onReact, onFavorite, isFavorita, isDestinatari
   };
 
   return (
-    <motion.article
-      variants={containerVariants}
-      initial="hidden"
-      animate="visible"
-      className="mx-auto w-full max-w-lg"
-    >
-      {/* Paper card */}
-      <div
-        className="relative rounded-3xl border border-line bg-white px-7 py-8 shadow-[var(--shadow-letter)]"
-        style={{ background: "linear-gradient(160deg, #ffffff 0%, #fdfcf9 100%)" }}
+    <>
+      <motion.article
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="mx-auto w-full max-w-lg"
       >
-        {/* Date stamp */}
-        <motion.div variants={itemVariants} className="mb-6 flex items-center justify-between">
-          <span className="text-xs text-ink-faint">{dataFormatada}</span>
-          <button
-            onClick={onFavorite}
-            className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-ink-faint transition-colors hover:bg-mist hover:text-accent"
-          >
-            <Heart
-              size={13}
-              className={isFavorita ? "fill-accent text-accent" : ""}
-            />
-            {isFavorita ? "Favoritada" : "Favoritar"}
-          </button>
-        </motion.div>
-
-        {/* Sender */}
-        <motion.div variants={itemVariants} className="mb-6 flex items-center gap-3">
-          <Avatar
-            src={remetenteFotoUrl}
-            name={mensagem.remetenteNome}
-            size="md"
-          />
-          <div>
-            <p className="text-sm font-semibold text-ink">{mensagem.remetenteNome}</p>
-            <p className="text-xs text-ink-faint">enviou uma mensagem especial ✉️</p>
-          </div>
-        </motion.div>
-
-        {/* Divider */}
-        <motion.hr variants={itemVariants} className="mb-6 border-line" />
-
-        {/* Message body */}
-        <motion.p
-          variants={itemVariants}
-          className="whitespace-pre-wrap text-[17px] leading-relaxed text-ink"
-          style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
+        {/* Paper card */}
+        <div
+          className="relative rounded-3xl border border-line bg-white px-7 py-8 shadow-[var(--shadow-letter)]"
+          style={{ background: "linear-gradient(160deg, #ffffff 0%, #fdfcf9 100%)" }}
         >
-          {mensagem.texto}
-        </motion.p>
+          {/* Date stamp */}
+          <motion.div variants={itemVariants} className="mb-6 flex items-center justify-between">
+            <span className="text-xs text-ink-faint">{dataFormatada}</span>
+            <button
+              onClick={onFavorite}
+              className="flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium text-ink-faint transition-colors hover:bg-mist hover:text-accent"
+            >
+              <Heart
+                size={13}
+                className={isFavorita ? "fill-accent text-accent" : ""}
+              />
+              {isFavorita ? "Favoritada" : "Favoritar"}
+            </button>
+          </motion.div>
 
-        {/* Photo */}
-        {fotoUrl && (
-          <motion.div
+          {/* Sender */}
+          <motion.div variants={itemVariants} className="mb-6 flex items-center gap-3">
+            <Avatar
+              src={remetenteFotoUrl}
+              name={mensagem.remetenteNome}
+              size="md"
+            />
+            <div>
+              <p className="text-sm font-semibold text-ink">{mensagem.remetenteNome}</p>
+              <p className="text-xs text-ink-faint">enviou uma mensagem especial ✉️</p>
+            </div>
+          </motion.div>
+
+          {/* Divider */}
+          <motion.hr variants={itemVariants} className="mb-6 border-line" />
+
+          {/* Message body */}
+          <motion.p
             variants={itemVariants}
-            className="mt-6 overflow-hidden rounded-2xl border border-line"
+            className="whitespace-pre-wrap text-[17px] leading-relaxed text-ink"
+            style={{ fontFamily: "Georgia, 'Times New Roman', serif" }}
           >
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={fotoUrl}
-              alt="Foto anexada"
-              className="w-full object-cover"
-              style={{ maxHeight: 320 }}
-            />
-          </motion.div>
-        )}
+            {mensagem.texto}
+          </motion.p>
 
-        {/* YouTube music */}
-        {mensagem.videoYoutubeId && (
-          <motion.div variants={itemVariants} className="mt-5">
-            <MusicCard videoId={mensagem.videoYoutubeId} />
-          </motion.div>
-        )}
+          {/* Photo */}
+          {fotoUrl && (
+            <motion.div
+              variants={itemVariants}
+              className="mt-6 overflow-hidden rounded-2xl border border-line"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <button type="button"
+                onClick={() => setImagemAberta(true)}
+                className="block w-full cursor-zoom-in">
+                <img
+                  src={fotoUrl}
+                  alt="Foto anexada"
+                  className="w-full object-cover"
+                  // className="w-full h-auto max-h-[500px] object-contain bg-paper-soft"
+                  style={{ maxHeight: 320 }}
+                />
+              </button>
 
-        {/* Reactions */}
-        {isDestinatario && (
-          <motion.div variants={itemVariants} className="mt-8 border-t border-line pt-6">
-            <p className="mb-3 text-center text-xs font-medium text-ink-faint">
-              O que você sentiu ao ler?
-            </p>
-            <ReactionBar
-              reacaoAtual={mensagem.reacao ?? null}
-              onReact={onReact}
-            />
-          </motion.div>
-        )}
+            </motion.div>
+          )}
 
-        {!isDestinatario && mensagem.reacao && (
-          <motion.div variants={itemVariants} className="mt-6 border-t border-line pt-5 text-center">
-            <p className="text-xs text-ink-faint">Reação recebida</p>
-            <span className="text-2xl">
-              {{"coracao":"❤️","sorriso":"😊","palmas":"👏","emocionado":"🥹"}[mensagem.reacao]}
-            </span>
-          </motion.div>
-        )}
-      </div>
-    </motion.article>
+          {/* YouTube music */}
+          {mensagem.videoYoutubeId && (
+            <motion.div variants={itemVariants} className="mt-5">
+              <MusicCard videoId={mensagem.videoYoutubeId} />
+            </motion.div>
+          )}
+
+          {/* Reactions */}
+          {isDestinatario && (
+            <motion.div variants={itemVariants} className="mt-8 border-t border-line pt-6">
+              <p className="mb-3 text-center text-xs font-medium text-ink-faint">
+                O que você sentiu ao ler?
+              </p>
+              <ReactionBar
+                reacaoAtual={mensagem.reacao ?? null}
+                onReact={onReact}
+              />
+            </motion.div>
+          )}
+
+          {!isDestinatario && mensagem.reacao && (
+            <motion.div variants={itemVariants} className="mt-6 border-t border-line pt-5 text-center">
+              <p className="text-xs text-ink-faint">Reação recebida</p>
+              <span className="text-2xl">
+                {{ "coracao": "❤️", "sorriso": "😊", "palmas": "👏", "emocionado": "🥹" }[mensagem.reacao]}
+              </span>
+            </motion.div>
+          )}
+        </div>
+      </motion.article>
+
+      {imagemAberta && fotoUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setImagemAberta(false)}
+        >
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={fotoUrl}
+            alt="Foto ampliada"
+            className="max-h-[90vh] max-w-[90vw] rounded-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+    </>
   );
 }
 
