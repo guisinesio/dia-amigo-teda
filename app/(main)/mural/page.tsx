@@ -1,12 +1,15 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, RefreshCw, Heart, ChevronDown } from "lucide-react";
+import { X, RefreshCw, Heart, LayoutGrid } from "lucide-react";
 import { driveImageUrl } from "@/lib/drive";
 import type { MuralMessage } from "@/app/api/mural/route";
 
-const BUBBLES_PER_PAGE = 20;
+// Quantas bolhas ficam "flutuando" no mural ao mesmo tempo (as mais recentes).
+// O resto só aparece no modal "Ver todas".
+const FLOATING_CAP_DESKTOP = 16;
+const FLOATING_CAP_MOBILE = 10;
 
 const BUBBLE_COLORS = [
   { from: "#3b82f6", to: "#2563eb" },
@@ -46,40 +49,45 @@ function formatDate(iso: string) {
   } catch { return ""; }
 }
 
+// Gera posições SEM colisão: rows é calculado a partir da quantidade real,
+// nunca "roda" de volta ao início (era essa a causa da sobreposição).
 function generatePositions(count: number, mobile = false) {
+  if (count === 0) return [];
+
   if (mobile) {
-    // Mobile: 2 colunas fixas (6% e 52%) com jitter pequeno em X e variação em Y.
-    // Evita o clamping que ocorria quando cellW=50 jogava col=1 acima de maxLeft.
-    // Pílula ~130px em 375px = ~35%; col1 a 52% termina em 87% — dentro da tela.
-    const totalRows = Math.ceil(count / 2);
-    const cellH = 82 / Math.max(totalRows, 4);
+    const cols = 2;
+    const rows = Math.ceil(count / cols);
+    const cellH = 100 / rows;
     return Array.from({ length: count }, (_, i) => {
-      const col = i % 2;
-      const row = Math.floor(i / 2);
+      const col = i % cols;
+      const row = Math.floor(i / cols);
       const jitterX = Math.sin(i * 3.7) * 4;
-      const jitterY = (Math.cos(i * 5.1) * 0.25 + 0.5) * cellH;
+      const jitterY = (Math.cos(i * 5.1) * 0.15 + 0.15) * cellH;
       return {
         left: Math.max(2, (col === 0 ? 6 : 52) + jitterX),
-        top: Math.min(85, Math.max(2, row * cellH + jitterY)),
+        top: Math.min(100 - cellH * 0.5, Math.max(2, row * cellH + jitterY)),
       };
     });
   }
-  // Desktop: 4 colunas com jitter orgânico
-  const cols = 4, rows = 4;
-  const cellW = 100 / cols, cellH = 100 / rows;
+
+  // Desktop: número de colunas fixo, mas número de LINHAS acompanha a
+  // quantidade real de itens — nunca dá "wrap" e nunca sobrepõe.
+  const cols = 4;
+  const rows = Math.max(1, Math.ceil(count / cols));
+  const cellW = 100 / cols;
+  const cellH = 100 / rows;
   return Array.from({ length: count }, (_, i) => {
     const col = i % cols;
-    const row = Math.floor(i / cols) % rows;
+    const row = Math.floor(i / cols);
     const jitterX = (Math.sin(i * 7.3) * 0.20 + 0.37) * cellW;
     const jitterY = (Math.cos(i * 5.1) * 0.20 + 0.37) * cellH;
     return {
-      left: Math.min(78, Math.max(2, col * cellW + jitterX)),
-      top: Math.min(88, Math.max(2, row * cellH + jitterY)),
+      left: Math.min(90, Math.max(2, col * cellW + jitterX)),
+      top: Math.min(100 - cellH * 0.6, Math.max(2, row * cellH + jitterY)),
     };
   });
 }
 
-// Avatar individual — foto com fallback para iniciais
 function Avatar({
   fotoId, name, size,
 }: { fotoId: string | null; name: string; size: number }) {
@@ -108,7 +116,6 @@ function Avatar({
   );
 }
 
-// Pílula de bolha: (foto/iniciais remetente) → (foto/iniciais destinatário)
 function BubblePill({ msg, onClick }: { msg: MuralMessage; onClick: () => void }) {
   const color = colorFor(msg.id);
   const floatY = seeded(msg.id, 2, 8, 18);
@@ -144,11 +151,28 @@ function BubblePill({ msg, onClick }: { msg: MuralMessage; onClick: () => void }
   );
 }
 
+// Card estático usado dentro do modal "Ver todas" (grid real, sem posição solta)
+function BubbleCard({ msg, onClick }: { msg: MuralMessage; onClick: () => void }) {
+  const color = colorFor(msg.id);
+  return (
+    <button
+      onClick={onClick}
+      className="flex items-center gap-2 rounded-full px-3 py-2 shadow-md overflow-hidden transition-transform hover:scale-105"
+      style={{ background: `linear-gradient(135deg, ${color.from}, ${color.to})` }}
+      title={`De ${msg.remetenteNome} para ${msg.destinatarioNome}`}
+    >
+      <Avatar fotoId={msg.remetenteFotoId} name={msg.remetenteNome} size={36} />
+      <span className="text-sm font-bold text-white/80 select-none">→</span>
+      <Avatar fotoId={msg.destinatarioFotoId} name={msg.destinatarioNome} size={36} />
+    </button>
+  );
+}
+
 export default function MuralPage() {
   const [all, setAll] = useState<MuralMessage[]>([]);
-  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<MuralMessage | null>(null);
+  const [showAll, setShowAll] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -164,15 +188,26 @@ export default function MuralPage() {
     try {
       const res = await fetch("/api/mural");
       const json = await res.json();
-      if (json.ok) { setAll(json.data ?? []); setPage(1); }
-    } finally { setLoading(false); }
+      if (json.ok) {
+        const data: MuralMessage[] = json.data ?? [];
+        // Mais recentes primeiro
+        data.sort((a, b) => new Date(b.data).getTime() - new Date(a.data).getTime());
+        setAll(data);
+      }
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
   useEffect(() => { fetch_(); }, [fetch_]);
 
-  const visible = all.slice(0, page * BUBBLES_PER_PAGE);
-  const hasMore = visible.length < all.length;
-  const positions = generatePositions(visible.length, isMobile);
+  const cap = isMobile ? FLOATING_CAP_MOBILE : FLOATING_CAP_DESKTOP;
+  const floating = useMemo(() => all.slice(0, cap), [all, cap]);
+  const positions = useMemo(
+    () => generatePositions(floating.length, isMobile),
+    [floating.length, isMobile]
+  );
+  const hasMore = all.length > cap;
 
   return (
     <div className="flex h-full flex-col overflow-hidden">
@@ -186,19 +221,29 @@ export default function MuralPage() {
               : "Nenhuma mensagem ainda"}
           </p>
         </div>
-        <button
-          onClick={fetch_}
-          disabled={loading}
-          className="flex items-center gap-1.5 rounded-xl border border-line px-3 py-2 text-xs font-medium text-ink-soft transition-colors hover:bg-mist disabled:opacity-40"
-        >
-          <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
-          Atualizar
-        </button>
+        <div className="flex items-center gap-2">
+          {hasMore && (
+            <button
+              onClick={() => setShowAll(true)}
+              className="flex items-center gap-1.5 rounded-xl border border-line px-3 py-2 text-xs font-medium text-ink-soft transition-colors hover:bg-mist"
+            >
+              <LayoutGrid size={13} />
+              Ver todas ({all.length})
+            </button>
+          )}
+          <button
+            onClick={fetch_}
+            disabled={loading}
+            className="flex items-center gap-1.5 rounded-xl border border-line px-3 py-2 text-xs font-medium text-ink-soft transition-colors hover:bg-mist disabled:opacity-40"
+          >
+            <RefreshCw size={13} className={loading ? "animate-spin" : ""} />
+            Atualizar
+          </button>
+        </div>
       </div>
 
       {/* Canvas */}
       <div className="relative flex-1 overflow-hidden bg-gradient-to-br from-brand-soft via-paper to-accent-soft">
-        {/* Fundo decorativo */}
         <div className="pointer-events-none absolute inset-0">
           {[180, 260, 140, 320, 200].map((s, i) => (
             <div key={i} className="absolute rounded-full bg-brand/5"
@@ -222,10 +267,10 @@ export default function MuralPage() {
           </div>
         )}
 
-        {/* Pílulas flutuantes */}
         <AnimatePresence>
-          {visible.map((msg, i) => {
+          {floating.map((msg, i) => {
             const pos = positions[i];
+            if (!pos) return null;
             return (
               <motion.div
                 key={msg.id}
@@ -242,21 +287,63 @@ export default function MuralPage() {
           })}
         </AnimatePresence>
 
-        {/* Ver mais */}
         {hasMore && (
           <motion.button
-            onClick={() => setPage((p) => p + 1)}
+            onClick={() => setShowAll(true)}
             className="absolute bottom-4 left-1/2 flex -translate-x-1/2 items-center gap-2 rounded-full border border-line bg-paper/90 px-4 py-2 text-sm font-medium text-ink shadow-md backdrop-blur-sm hover:bg-mist transition-colors"
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <ChevronDown size={15} />
-            Ver mais {Math.min(BUBBLES_PER_PAGE, all.length - visible.length)} mensagens
+            <LayoutGrid size={15} />
+            Ver todas as {all.length} mensagens
           </motion.button>
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal "Ver todas" — grid real, sem posição solta, sempre legível */}
+      <AnimatePresence>
+        {showAll && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end justify-center sm:items-center"
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+          >
+            <motion.div className="absolute inset-0 bg-ink/40 backdrop-blur-sm" onClick={() => setShowAll(false)} />
+            <motion.div
+              className="relative z-10 mx-4 mb-4 w-full max-w-2xl flex flex-col rounded-2xl bg-paper shadow-[var(--shadow-letter)] sm:mb-0"
+              style={{ maxHeight: "85vh" }}
+              initial={{ opacity: 0, y: 60, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 40, scale: 0.95 }}
+              transition={{ type: "spring", stiffness: 300, damping: 28 }}
+            >
+              <div className="flex flex-shrink-0 items-center justify-between border-b border-line px-5 py-4">
+                <h2 className="text-base font-bold text-ink">
+                  Todas as mensagens ({all.length})
+                </h2>
+                <button
+                  onClick={() => setShowAll(false)}
+                  className="rounded-full bg-mist p-1.5 text-ink-soft hover:bg-mist-dark transition-colors"
+                >
+                  <X size={16} />
+                </button>
+              </div>
+              <div className="overflow-y-auto p-5">
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {all.map((msg) => (
+                    <BubbleCard
+                      key={msg.id}
+                      msg={msg}
+                      onClick={() => { setSelected(msg); setShowAll(false); }}
+                    />
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Modal de mensagem individual */}
       <AnimatePresence>
         {selected && (
           <motion.div
@@ -272,7 +359,6 @@ export default function MuralPage() {
               exit={{ opacity: 0, y: 40, scale: 0.95 }}
               transition={{ type: "spring", stiffness: 300, damping: 28 }}
             >
-              {/* Header — fixo no topo do modal */}
               <div
                 className="flex-shrink-0 rounded-t-2xl px-5 py-4"
                 style={{ background: `linear-gradient(135deg, ${colorFor(selected.id).from}, ${colorFor(selected.id).to})` }}
@@ -304,7 +390,6 @@ export default function MuralPage() {
                 </div>
               </div>
 
-              {/* Conteúdo — rolável quando necessário */}
               <div className="overflow-y-auto p-5">
                 <p className="font-serif text-[15px] leading-relaxed text-ink">{selected.texto}</p>
 
