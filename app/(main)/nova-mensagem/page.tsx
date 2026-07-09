@@ -7,7 +7,7 @@ import { Send } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { ColaboradorSearch } from "@/components/compose/ColaboradorSearch";
 import { MusicSearch } from "@/components/compose/MusicSearch";
-import { PhotoUpload } from "@/components/compose/PhotoUpload";
+// import { PhotoUpload } from "@/components/compose/PhotoUpload";
 import type { ColaboradorPublico } from "@/types/colaborador";
 import type { YoutubeVideo } from "@/app/api/youtube/search/route";
 
@@ -16,7 +16,7 @@ export default function NovaMensagemPage() {
 
   const [destinatario, setDestinatario] = useState<ColaboradorPublico | null>(null);
   const [texto, setTexto] = useState("");
-  const [imagemDriveId, setImagemDriveId] = useState<string | null>(null);
+  // const [imagemDriveId, setImagemDriveId] = useState<string | null>(null);
   const [video, setVideo] = useState<YoutubeVideo | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +33,10 @@ export default function NovaMensagemPage() {
         body: JSON.stringify({
           destinatarioMatricula: destinatario.matricula,
           texto: texto.trim(),
+          // imagemBase64: null,
+          // imagemDriveId: imagemDriveId ?? null,
           imagemBase64: null,
-          imagemDriveId: imagemDriveId ?? null,
+          imagemDriveId:  null,
           videoYoutubeId: video?.videoId ?? null,
         }),
       });
@@ -75,7 +77,10 @@ export default function NovaMensagemPage() {
           transition={{ delay: 0.4 }}
           className="flex gap-3"
         >
-          <Button variant="secondary" onClick={() => { setSuccess(false); setDestinatario(null); setTexto(""); setImagemDriveId(null); setVideo(null); }}>
+          {/* <Button variant="secondary" onClick={() => { setSuccess(false); setDestinatario(null); setTexto(""); setImagemDriveId(null); setVideo(null); }}>
+            Enviar outra
+          </Button> */}
+          <Button variant="secondary" onClick={() => { setSuccess(false); setDestinatario(null); setTexto(""); setVideo(null); }}>
             Enviar outra
           </Button>
           <Button onClick={() => router.push("/enviadas")}>
@@ -121,11 +126,11 @@ export default function NovaMensagemPage() {
         </div>
 
         {/* Foto */}
-        <PhotoUpload
+        {/* <PhotoUpload
           fileId={imagemDriveId}
           onUpload={setImagemDriveId}
           onClear={() => setImagemDriveId(null)}
-        />
+        /> */}
 
         {/* Música */}
         <MusicSearch
