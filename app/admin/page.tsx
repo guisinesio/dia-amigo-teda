@@ -71,9 +71,27 @@ interface Stats {
   totalMensagens: number;
   lidas: number;
   naoLidas: number;
-  porSetor: { setor: string; total: number }[];
-  ranking: { nome: string; total: number }[];
-  porDia: { data: string; total: number }[];
+
+  porSetor: {
+    setor: string;
+    total: number;
+  }[];
+
+  ranking: {
+    nome: string;
+    total: number;
+  }[];
+
+  rankingRecebidos: {
+    matricula: string;
+    nome: string;
+    total: number;
+  }[];
+
+  porDia: {
+    data: string;
+    total: number;
+  }[];
 }
 
 export default function AdminPage() {
@@ -121,12 +139,12 @@ export default function AdminPage() {
 
   const statCards = stats
     ? [
-        { icon: Users, label: "Colaboradores", value: stats.totalColaboradores, color: "bg-mist text-ink-soft" },
-        { icon: Users, label: "Participantes", value: stats.totalParticipantes, color: "bg-brand-soft text-brand" },
-        { icon: Mail, label: "Mensagens", value: stats.totalMensagens, color: "bg-brand-soft text-brand" },
-        { icon: Eye, label: "Lidas", value: stats.lidas, color: "bg-brand-soft text-brand" },
-        { icon: EyeOff, label: "Não lidas", value: stats.naoLidas, color: "bg-accent-soft text-accent" },
-      ]
+      { icon: Users, label: "Colaboradores", value: stats.totalColaboradores, color: "bg-mist text-ink-soft" },
+      { icon: Users, label: "Participantes", value: stats.totalParticipantes, color: "bg-brand-soft text-brand" },
+      { icon: Mail, label: "Mensagens", value: stats.totalMensagens, color: "bg-brand-soft text-brand" },
+      { icon: Eye, label: "Lidas", value: stats.lidas, color: "bg-brand-soft text-brand" },
+      { icon: EyeOff, label: "Não lidas", value: stats.naoLidas, color: "bg-accent-soft text-accent" },
+    ]
     : [];
 
   const maxDia = Math.max(...(stats?.porDia.map((d) => d.total) ?? [1]));
@@ -248,31 +266,78 @@ export default function AdminPage() {
               </motion.div>
             </div>
 
-            {/* Ranking */}
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-            >
-              <Card className="p-5">
-                <h2 className="mb-4 text-sm font-semibold text-ink">🏆 Ranking de participação</h2>
-                <div className="flex flex-col gap-2">
-                  {stats.ranking.map(({ nome, total }, i) => (
-                    <div key={nome} className="flex items-center gap-3 rounded-xl p-2 hover:bg-mist transition-colors">
-                      <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0 ? "bg-[#FFD700] text-white" : i === 1 ? "bg-[#C0C0C0] text-white" : i === 2 ? "bg-[#CD7F32] text-white" : "bg-mist text-ink-faint"}`}>
-                        {i + 1}
-                      </span>
-                      <span className="flex-1 text-sm text-ink">{nome}</span>
-                      <span className="text-sm font-semibold text-brand">{total} msgs</span>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </motion.div>
-          {/* Upload de fotos */}
+            <div className="grid gap-4 lg:grid-cols-2">
+
+              {/* Ranking  de participacao*/}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.4 }}
+              >
+                <Card className="p-5">
+                  <h2 className="mb-4 text-sm font-semibold text-ink">🏆 Ranking de participação</h2>
+                  <div className="flex flex-col gap-2">
+                    {stats.ranking.map(({ nome, total }, i) => (
+                      <div key={nome} className="flex items-center gap-3 rounded-xl p-2 hover:bg-mist transition-colors">
+                        <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0 ? "bg-[#FFD700] text-white" : i === 1 ? "bg-[#C0C0C0] text-white" : i === 2 ? "bg-[#CD7F32] text-white" : "bg-mist text-ink-faint"}`}>
+                          {i + 1}
+                        </span>
+                        <span className="flex-1 text-sm text-ink">{nome}</span>
+                        <span className="text-sm font-semibold text-brand">{total} msgs</span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </motion.div>
+
+              {/* Ranking de mensagens recebidas */}
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.45 }}
+              >
+                <Card className="p-5">
+                  <h2 className="mb-4 text-sm font-semibold text-ink">
+                    💌 Ranking de mensagens recebidas
+                  </h2>
+
+                  <div className="flex flex-col gap-2">
+                    {stats.rankingRecebidos.map(({ nome, total }, i) => (
+                      <div
+                        key={nome}
+                        className="flex items-center gap-3 rounded-xl p-2 hover:bg-mist transition-colors"
+                      >
+                        <span
+                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0
+                              ? "bg-[#FFD700] text-white"
+                              : i === 1
+                                ? "bg-[#C0C0C0] text-white"
+                                : i === 2
+                                  ? "bg-[#CD7F32] text-white"
+                                  : "bg-mist text-ink-faint"
+                            }`}
+                        >
+                          {i + 1}
+                        </span>
+
+                        <span className="flex-1 text-sm text-ink">
+                          {nome}
+                        </span>
+
+                        <span className="text-sm font-semibold text-brand">
+                          {total} msgs
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+              </motion.div>
+            </div>
+
+            {/* Upload de fotos */}
             <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}>
               <Card className="p-5">
-                <h2 className="mb-1 text-sm font-semibold text-ink">📸 Fotos dos colaboradores</h2>
+                <h2 className="mb-1 text-sm font-semibold text-ink">Fotos dos colaboradores</h2>
                 <p className="mb-4 text-xs text-ink-faint">Faça upload das fotos para exibir no mural e no perfil.</p>
                 {loadingColab ? (
                   <div className="flex justify-center py-6"><Spinner /></div>
