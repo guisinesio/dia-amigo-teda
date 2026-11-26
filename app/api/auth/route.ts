@@ -4,19 +4,34 @@ import { createSession, destroySession } from "@/lib/session";
 import { ok, err } from "@/lib/api-helpers";
 import type { Colaborador } from "@/types/colaborador";
 
+// Matricula: 1-20 digits only
+const MATRICULA_RE = /^\d{1,20}$/;
+// Date: YYYY-MM-DD
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
-  if (!body?.matricula || !body?.nascimento) {
+
+  const matricula: string = (body?.matricula ?? "").trim();
+  const nascimento: string = (body?.nascimento ?? "").trim();
+
+  if (!matricula || !nascimento) {
     return err("Informe matrícula e data de nascimento.");
+  }
+  if (!MATRICULA_RE.test(matricula)) {
+    return err("Matrícula inválida.");
+  }
+  if (!DATE_RE.test(nascimento)) {
+    return err("Data de nascimento inválida.");
   }
 
   const result = await callGas<Colaborador>({
     action: "auth.login",
-    payload: { matricula: body.matricula, nascimento: body.nascimento },
+    payload: { matricula, nascimento },
   });
 
   if (!result.ok || !result.data) {
-    return err(result.error ?? "Dados inválidos.", 401);
+    return err("Dados inválidos.", 401);
   }
 
   const colaborador = result.data;

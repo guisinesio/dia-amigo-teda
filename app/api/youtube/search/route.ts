@@ -13,15 +13,17 @@ export interface YoutubeSearchResult {
   isMock: boolean;
 }
 
+const MAX_QUERY_LENGTH = 100;
+
 export async function GET(req: NextRequest) {
   const session = await requireSession();
   if (isErrorResponse(session)) return session;
 
-  const q = req.nextUrl.searchParams.get("q") ?? "";
-  if (q.trim().length < 2) return ok<YoutubeSearchResult>({ items: [], isMock: false });
+  const q = (req.nextUrl.searchParams.get("q") ?? "").trim();
+  if (q.length < 2) return ok<YoutubeSearchResult>({ items: [], isMock: false });
+  if (q.length > MAX_QUERY_LENGTH) return err("Consulta muito longa.");
 
   const apiKey = process.env.YOUTUBE_API_KEY;
-
   if (!apiKey) {
     return ok<YoutubeSearchResult>({ items: [], isMock: true });
   }
@@ -34,7 +36,7 @@ export async function GET(req: NextRequest) {
   url.searchParams.set("key", apiKey);
 
   const res = await fetch(url.toString(), { cache: "no-store" });
-  if (!res.ok) return err("Erro ao buscar músicas.");
+  if (!res.ok) return err("Erro ao buscar vídeos.");
 
   const json = await res.json();
   const items: YoutubeVideo[] = (json.items ?? []).map((item: any) => ({

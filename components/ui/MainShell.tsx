@@ -31,14 +31,18 @@ export function MainShell({ children }: { children: React.ReactNode }) {
     <div className="flex h-svh flex-col overflow-hidden lg:flex-row">
       {/* Sidebar — desktop only */}
       <aside className="hidden lg:flex lg:h-full lg:w-64 lg:flex-shrink-0 lg:flex-col lg:border-r lg:border-line lg:bg-paper">
-        <div className="flex h-16 items-center gap-3 border-b border-line px-5">
-          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a4a8a]">
+        <div className="relative flex h-16 items-center gap-3 border-b border-line px-5 overflow-hidden">
+          {/* faixa decorativa natalina no topo do sidebar */}
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-brand via-accent to-pine opacity-80" />
+          <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1a4a8a] ring-2 ring-brand/20">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/logo.jpg" alt="TEDA" className="h-full w-full object-cover" />
           </div>
           <div className="min-w-0">
-            <p className="text-sm font-bold text-ink leading-tight">Correio do Amigo</p>
-            <p className="text-[11px] text-ink-faint leading-tight">TEDA Distribuição</p>
+            <p className="text-sm font-bold text-ink leading-tight">Correio TEDA</p>
+            <p className="text-[11px] text-brand/80 leading-tight font-semibold tracking-wide">
+              🎄 Natal 2026
+            </p>
           </div>
         </div>
 

@@ -20,8 +20,9 @@ export default function EnviadasPage() {
         <div className="flex items-center gap-2">
           <Send size={20} className="text-brand" />
           <h1 className="text-lg font-bold text-ink">Enviadas</h1>
+          <span className="christmas-sparkle text-base">🎄</span>
         </div>
-        <p className="mt-0.5 text-sm text-ink-faint">Mensagens que você enviou</p>
+        <p className="mt-0.5 text-sm text-ink-faint">Cartinhas natalinas que você enviou</p>
       </div>
 
       <div className="flex-1 px-3 py-3 lg:px-6">
@@ -41,8 +42,8 @@ export default function EnviadasPage() {
               className="flex flex-col items-center gap-3 py-20 text-center"
             >
               <span className="text-4xl">📤</span>
-              <p className="font-medium text-ink">Nenhuma mensagem enviada</p>
-              <p className="text-sm text-ink-faint">Envie sua primeira carta!</p>
+              <p className="font-medium text-ink">Nenhuma cartinha enviada</p>
+              <p className="text-sm text-ink-faint">Envie sua primeira cartinha natalina!</p>
               <Link href="/nova-mensagem" className="mt-2 text-sm font-medium text-brand hover:underline">
                 Nova mensagem →
               </Link>

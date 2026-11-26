@@ -36,7 +36,7 @@ export function MessageListItem({ mensagem, index }: MessageListItemProps) {
         className={cn(
           "flex items-start gap-3.5 rounded-2xl p-4 transition-all",
           "hover:bg-mist active:scale-[0.99]",
-          naoLida && "bg-brand-soft/40",
+          naoLida && "bg-brand-soft/50 border-l-2 border-brand/30",
         )}
       >
         {/* Avatar */}

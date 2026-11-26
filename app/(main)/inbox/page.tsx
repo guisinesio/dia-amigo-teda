@@ -17,6 +17,7 @@ export default function InboxPage() {
         <div className="flex items-center gap-2">
           <Inbox size={20} className="text-brand" />
           <h1 className="text-lg font-bold text-ink">Caixa de Entrada</h1>
+          <span className="text-base christmas-sparkle">🎄</span>
           {naoLidas > 0 && (
             <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-accent px-1.5 text-[10px] font-bold text-white">
               {naoLidas}
@@ -49,8 +50,8 @@ export default function InboxPage() {
               className="flex flex-col items-center gap-3 py-20 text-center"
             >
               <span className="text-4xl">📭</span>
-              <p className="font-medium text-ink">Nenhuma mensagem ainda</p>
-              <p className="text-sm text-ink-faint">Suas cartas aparecerão aqui</p>
+              <p className="font-medium text-ink">Nenhuma cartinha ainda</p>
+              <p className="text-sm text-ink-faint">Suas cartinhas natalinas aparecerão aqui</p>
             </motion.div>
           )}
         </AnimatePresence>

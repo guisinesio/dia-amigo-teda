@@ -43,7 +43,11 @@ export default function PerfilPage() {
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
       <div className="border-b border-line bg-paper px-5 py-5 lg:px-8">
-        <h1 className="text-lg font-bold text-ink">Meu Perfil</h1>
+        <div className="flex items-center gap-2">
+          <h1 className="text-lg font-bold text-ink">Meu Perfil</h1>
+          <span className="christmas-sparkle text-base">⭐</span>
+        </div>
+        <p className="mt-0.5 text-xs text-ink-faint">Correio TEDA · Natal 2026</p>
       </div>
 
       <div className="flex flex-col gap-5 px-5 py-6 lg:px-8">

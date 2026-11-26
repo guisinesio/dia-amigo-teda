@@ -1,33 +1,37 @@
 @import "tailwindcss";
 
 :root {
-  /* Superfícies */
-  --color-paper: #ffffff;
-  --color-paper-soft: #fafafa;
-  --color-mist: #f4f5f7;
-  --color-mist-dark: #ebedf0;
+  /* ── Superfícies — papel aquecido natalino ── */
+  --color-paper: #fffef9;
+  --color-paper-soft: #fdf8f0;
+  --color-mist: #f5f0e8;
+  --color-mist-dark: #ede6d8;
 
-  /* Texto */
-  --color-ink: #1c1e21;
-  --color-ink-soft: #5b5f66;
-  --color-ink-faint: #9aa0a8;
+  /* ── Texto — tons aquecidos ── */
+  --color-ink: #1a1208;
+  --color-ink-soft: #4a3728;
+  --color-ink-faint: #8c7a68;
 
-  /* Marca / ação */
-  --color-brand: #3b6dd8;
-  --color-brand-soft: #eef2fd;
-  --color-brand-dark: #2c52ac;
+  /* ── Marca — vermelho natalino ── */
+  --color-brand: #c41e3a;
+  --color-brand-soft: #fdf0f2;
+  --color-brand-dark: #9b1a2e;
 
-  /* Notificação / destaque */
-  --color-accent: #e5484d;
-  --color-accent-soft: #fdecec;
+  /* ── Destaque — dourado natalino ── */
+  --color-accent: #b5810f;
+  --color-accent-soft: #fdf5e0;
 
-  /* Bordas */
-  --color-line: #e7e8eb;
+  /* ── Verde pinheiro ── */
+  --color-pine: #2d5a27;
+  --color-pine-soft: #edf5ec;
 
-  /* Sombras suaves (envelope/carta) */
-  --shadow-card: 0 1px 2px rgba(28, 30, 33, 0.04), 0 8px 24px rgba(28, 30, 33, 0.06);
-  --shadow-card-hover: 0 2px 4px rgba(28, 30, 33, 0.06), 0 16px 40px rgba(28, 30, 33, 0.10);
-  --shadow-letter: 0 24px 64px rgba(28, 30, 33, 0.18);
+  /* ── Bordas aquecidas ── */
+  --color-line: #e6ddd0;
+
+  /* ── Sombras aquecidas ── */
+  --shadow-card: 0 1px 2px rgba(50, 20, 10, 0.05), 0 8px 24px rgba(50, 20, 10, 0.08);
+  --shadow-card-hover: 0 2px 4px rgba(50, 20, 10, 0.07), 0 16px 40px rgba(50, 20, 10, 0.14);
+  --shadow-letter: 0 24px 64px rgba(50, 20, 10, 0.22);
 }
 
 @theme inline {
@@ -46,6 +50,9 @@
 
   --color-accent: var(--color-accent);
   --color-accent-soft: var(--color-accent-soft);
+
+  --color-pine: var(--color-pine);
+  --color-pine-soft: var(--color-pine-soft);
 
   --color-line: var(--color-line);
 
@@ -68,4 +75,35 @@ body {
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-line) transparent;
+}
+
+/* ── Flocos de neve animados ── */
+@keyframes snow-fall {
+  0% { transform: translateY(-24px) rotate(0deg); opacity: 0; }
+  8% { opacity: 0.8; }
+  92% { opacity: 0.4; }
+  100% { transform: translateY(100vh) rotate(540deg); opacity: 0; }
+}
+
+.christmas-flake {
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+  animation: snow-fall linear infinite;
+  z-index: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .christmas-flake { animation: none !important; opacity: 0 !important; }
+}
+
+/* ── Brilho natalino ── */
+@keyframes xmas-sparkle {
+  0%, 100% { opacity: 0.4; transform: scale(0.85) rotate(0deg); }
+  50% { opacity: 1; transform: scale(1.2) rotate(15deg); }
+}
+
+.christmas-sparkle {
+  animation: xmas-sparkle 2.8s ease-in-out infinite;
+  display: inline-block;
 }

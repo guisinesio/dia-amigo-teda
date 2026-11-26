@@ -160,8 +160,11 @@ export default function AdminPage() {
               <ChevronLeft size={20} className="text-ink-soft" />
             </Link>
             <div>
-              <h1 className="text-lg font-bold text-ink">Painel Administrativo</h1>
-              <p className="text-xs text-ink-faint">Dia do Amigo Corporativo</p>
+              <div className="flex items-center gap-2">
+                <h1 className="text-lg font-bold text-ink">Painel Administrativo</h1>
+                <span className="text-sm christmas-sparkle">🎄</span>
+              </div>
+              <p className="text-xs text-ink-faint">Correio TEDA · Natal 2026</p>
             </div>
           </div>
           <Button variant="secondary" size="sm" onClick={handleExport} disabled={exporting}>
