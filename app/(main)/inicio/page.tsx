@@ -76,7 +76,7 @@ export default function InicioPage() {
                 name={user.nome}
                 size="md"
               />
-              <span className="absolute -top-1 -right-1 text-base">⭐</span>
+              {/* <span className="absolute -top-1 -right-1 text-base">⭐</span> */}
             </div>
           )}
         </motion.div>

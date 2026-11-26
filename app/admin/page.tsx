@@ -164,7 +164,7 @@ export default function AdminPage() {
                 <h1 className="text-lg font-bold text-ink">Painel Administrativo</h1>
                 <span className="text-sm christmas-sparkle">🎄</span>
               </div>
-              <p className="text-xs text-ink-faint">Correio TEDA · Natal 2026</p>
+              <p className="text-xs text-ink-faint">Correio TEDA | Natal 2026</p>
             </div>
           </div>
           <Button variant="secondary" size="sm" onClick={handleExport} disabled={exporting}>
@@ -278,7 +278,7 @@ export default function AdminPage() {
                 transition={{ delay: 0.4 }}
               >
                 <Card className="p-5">
-                  <h2 className="mb-4 text-sm font-semibold text-ink">🏆 Ranking de participação</h2>
+                  <h2 className="mb-4 text-sm font-semibold text-ink">Ranking de participação</h2>
                   <div className="flex flex-col gap-2">
                     {stats.ranking.map(({ nome, total }, i) => (
                       <div key={nome} className="flex items-center gap-3 rounded-xl p-2 hover:bg-mist transition-colors">
@@ -301,7 +301,7 @@ export default function AdminPage() {
               >
                 <Card className="p-5">
                   <h2 className="mb-4 text-sm font-semibold text-ink">
-                    💌 Ranking de mensagens recebidas
+                    Ranking de mensagens recebidas
                   </h2>
 
                   <div className="flex flex-col gap-2">
