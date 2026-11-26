@@ -32,27 +32,52 @@ export default function InicioPage() {
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
-      <div className="px-5 pb-8 pt-8 lg:px-8 lg:pt-10">
+      {/* Banner natalino */}
+      <div
+        className="relative overflow-hidden px-5 pb-7 pt-8 lg:px-8 lg:pt-10"
+        style={{
+          background: "linear-gradient(135deg, #2d5a27 0%, #c41e3a 100%)",
+        }}
+      >
+        {/* Flocos decorativos */}
+        {["12%","28%","45%","62%","78%","91%"].map((left, i) => (
+          <span
+            key={i}
+            className="christmas-flake text-white/25"
+            style={{
+              left,
+              animationDelay: `${i * 0.6}s`,
+              animationDuration: `${6 + i * 0.8}s`,
+              fontSize: i % 2 === 0 ? "0.9rem" : "0.6rem",
+            }}
+          >❄</span>
+        ))}
 
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="flex items-center justify-between"
+          className="relative z-10 flex items-center justify-between"
         >
           <div>
-            <p className="text-sm text-ink-faint">{saudacao()},</p>
-            <h1 className="text-2xl font-bold text-ink">
-              {primeiroNome} 👋
+            <p className="text-sm text-white/70">{saudacao()},</p>
+            <h1 className="text-2xl font-bold text-white">
+              {primeiroNome} 🎄
             </h1>
+            <p className="mt-1 text-xs font-semibold text-white/60 tracking-wide uppercase">
+              Correio TEDA · Natal 2026
+            </p>
           </div>
           {user && (
-            <Avatar
-              src={driveImageUrl(user.fotoDriveId)}
-              name={user.nome}
-              size="md"
-            />
+            <div className="relative">
+              <Avatar
+                src={driveImageUrl(user.fotoDriveId)}
+                name={user.nome}
+                size="md"
+              />
+              <span className="absolute -top-1 -right-1 text-base">⭐</span>
+            </div>
           )}
         </motion.div>
 
@@ -61,39 +86,41 @@ export default function InicioPage() {
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.4 }}
-          className="mt-6 rounded-3xl border border-line bg-paper p-5 shadow-[var(--shadow-card)]"
+          className="relative z-10 mt-5 rounded-2xl border border-white/20 bg-white/15 p-4 backdrop-blur-sm"
         >
           {loading ? (
-            <div className="h-12 animate-pulse rounded-2xl bg-mist" />
+            <div className="h-10 animate-pulse rounded-xl bg-white/20" />
           ) : naoLidas > 0 ? (
             <>
-              <p className="text-base font-semibold text-ink">
-                Você recebeu {naoLidas} {naoLidas === 1 ? "mensagem" : "mensagens"} ❤️
+              <p className="text-base font-semibold text-white">
+                Você recebeu {naoLidas} {naoLidas === 1 ? "cartinha" : "cartinhas"} natalina{naoLidas !== 1 ? "s" : ""} 🎁
               </p>
-              <p className="mb-4 mt-0.5 text-sm text-ink-faint">
+              <p className="mb-3 mt-0.5 text-sm text-white/70">
                 {naoLidas === 1 ? "Alguém pensou em você!" : "Pessoas especiais pensaram em você!"}
               </p>
             </>
           ) : total > 0 ? (
             <>
-              <p className="text-base font-semibold text-ink">Tudo lido! ✨</p>
-              <p className="mb-4 mt-0.5 text-sm text-ink-faint">Você leu todas as suas mensagens.</p>
+              <p className="text-base font-semibold text-white">Tudo lido! ✨</p>
+              <p className="mb-3 mt-0.5 text-sm text-white/70">Você leu todas as suas cartinhas.</p>
             </>
           ) : (
             <>
-              <p className="text-base font-semibold text-ink">Bem-vindo! 💌</p>
-              <p className="mb-4 mt-0.5 text-sm text-ink-faint">Suas mensagens aparecerão aqui.</p>
+              <p className="text-base font-semibold text-white">Bem-vindo ao Correio TEDA! 💌</p>
+              <p className="mb-3 mt-0.5 text-sm text-white/70">Suas cartinhas natalinas aparecerão aqui.</p>
             </>
           )}
           {total > 0 && <UnreadProgressBar total={total} naoLidas={naoLidas} />}
         </motion.div>
+      </div>
 
+      <div className="px-5 pb-8 pt-5 lg:px-8">
         {/* Action cards */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.4 }}
-          className="mt-6 grid grid-cols-2 gap-3"
+          className="grid grid-cols-2 gap-3"
         >
           {actions.map(({ href, icon: Icon, label, color, primary, badge }, i) => (
             <motion.div
@@ -149,6 +176,16 @@ export default function InicioPage() {
             </Link>
           </motion.div>
         )}
+
+        {/* Rodapé natalino */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mt-8 text-center text-xs text-ink-faint"
+        >
+          🎄 Compartilhe o espírito do Natal com seus colegas
+        </motion.p>
       </div>
     </div>
   );

@@ -59,7 +59,7 @@ export default function NovaMensagemPage() {
           transition={{ type: "spring", stiffness: 180, damping: 14 }}
           className="text-6xl"
         >
-          💌
+          🎁
         </motion.div>
         <motion.div
           initial={{ opacity: 0, y: 16 }}
@@ -98,8 +98,9 @@ export default function NovaMensagemPage() {
         <div className="flex items-center gap-2">
           <Send size={20} className="text-brand" />
           <h1 className="text-lg font-bold text-ink">Nova Mensagem</h1>
+          <span className="christmas-sparkle text-base">🎄</span>
         </div>
-        <p className="mt-0.5 text-sm text-ink-faint">Escreva uma carta especial para um colega 💙</p>
+        <p className="mt-0.5 text-sm text-ink-faint">Escreva sua cartinha de Natal para um colega ✨</p>
       </div>
 
       <div className="flex flex-col gap-5 px-5 py-6 lg:px-8">
@@ -118,7 +119,7 @@ export default function NovaMensagemPage() {
           <textarea
             value={texto}
             onChange={(e) => setTexto(e.target.value)}
-            placeholder="Escreva algo especial... pode ser um elogio, uma lembrança, um agradecimento. Seja você mesmo! ✨"
+            placeholder="Escreva algo especial de Natal... pode ser um elogio, uma lembrança, um agradecimento. Seja você mesmo! 🎄"
             rows={6}
             className="w-full resize-none rounded-2xl border border-line bg-paper-soft px-4 py-3.5 text-[15px] text-ink placeholder:text-ink-faint outline-none transition-all focus:border-brand focus:bg-paper focus:ring-4 focus:ring-brand/10 leading-relaxed"
           />

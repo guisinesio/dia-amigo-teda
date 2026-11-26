@@ -12,16 +12,16 @@ const FLOATING_CAP_DESKTOP = 16;
 const FLOATING_CAP_MOBILE = 10;
 
 const BUBBLE_COLORS = [
-  { from: "#3b82f6", to: "#2563eb" },
-  { from: "#f43f5e", to: "#e11d48" },
-  { from: "#8b5cf6", to: "#7c3aed" },
-  { from: "#10b981", to: "#059669" },
-  { from: "#f59e0b", to: "#d97706" },
-  { from: "#ec4899", to: "#db2777" },
-  { from: "#06b6d4", to: "#0891b2" },
-  { from: "#6366f1", to: "#4f46e5" },
-  { from: "#14b8a6", to: "#0d9488" },
-  { from: "#a855f7", to: "#9333ea" },
+  { from: "#c41e3a", to: "#9b1a2e" }, // vermelho natalino
+  { from: "#2d5a27", to: "#1d4020" }, // verde pinheiro
+  { from: "#c8942a", to: "#a07020" }, // dourado
+  { from: "#8b2635", to: "#6b1a28" }, // vermelho escuro
+  { from: "#1a6e3c", to: "#135030" }, // verde brilhante
+  { from: "#b55e1a", to: "#8c4812" }, // cobre
+  { from: "#7a1f2e", to: "#5a1520" }, // bordô
+  { from: "#3a6b2a", to: "#2a4f1e" }, // musgo
+  { from: "#c47a1a", to: "#9a5e14" }, // âmbar
+  { from: "#6b2d5e", to: "#4a1f42" }, // ameixa
 ];
 
 function seeded(id: string, offset: number, min: number, max: number) {
@@ -214,7 +214,10 @@ export default function MuralPage() {
       {/* Header */}
       <div className="flex flex-shrink-0 items-center justify-between border-b border-line bg-paper px-5 py-4">
         <div>
-          <h1 className="text-lg font-bold text-ink">Mural do Amigo</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-lg font-bold text-ink">Mural Natalino</h1>
+            <span className="christmas-sparkle text-base">🎄</span>
+          </div>
           <p className="text-xs text-ink-faint">
             {loading ? "Carregando..." : all.length > 0
               ? `${all.length} mensagem${all.length !== 1 ? "s" : ""} circulando`
@@ -243,7 +246,7 @@ export default function MuralPage() {
       </div>
 
       {/* Canvas */}
-      <div className="relative flex-1 overflow-hidden bg-gradient-to-br from-brand-soft via-paper to-accent-soft">
+      <div className="relative flex-1 overflow-hidden" style={{ background: "linear-gradient(160deg, #fdf0f2 0%, #fffef9 50%, #fdf5e0 100%)" }}>
         <div className="pointer-events-none absolute inset-0">
           {[180, 260, 140, 320, 200].map((s, i) => (
             <div key={i} className="absolute rounded-full bg-brand/5"

@@ -52,8 +52,15 @@ export function Carta({ mensagem, onReact, onFavorite, isFavorita, isDestinatari
         {/* Paper card */}
         <div
           className="relative rounded-3xl border border-line bg-white px-7 py-8 shadow-[var(--shadow-letter)]"
-          style={{ background: "linear-gradient(160deg, #ffffff 0%, #fdfcf9 100%)" }}
+          style={{ background: "linear-gradient(160deg, #fffef9 0%, #fdf8f0 100%)" }}
         >
+          {/* Ornamento natalino discreto no topo da carta */}
+          <div className="mb-4 flex items-center gap-2 text-ink-faint/40">
+            <div className="h-px flex-1 bg-current" />
+            <span className="text-xs">🎄</span>
+            <div className="h-px flex-1 bg-current" />
+          </div>
+
           {/* Date stamp */}
           <motion.div variants={itemVariants} className="mb-6 flex items-center justify-between">
             <span className="text-xs text-ink-faint">{dataFormatada}</span>
@@ -78,7 +85,7 @@ export function Carta({ mensagem, onReact, onFavorite, isFavorita, isDestinatari
             />
             <div>
               <p className="text-sm font-semibold text-ink">{mensagem.remetenteNome}</p>
-              <p className="text-xs text-ink-faint">enviou uma mensagem especial ✉️</p>
+              <p className="text-xs text-ink-faint">enviou uma mensagem especial 🎁</p>
             </div>
           </motion.div>
 
