@@ -66,7 +66,7 @@ export default function InicioPage() {
               {primeiroNome} 🎄
             </h1>
             <p className="mt-1 text-xs font-semibold text-white/60 tracking-wide uppercase">
-              Correio TEDA · Natal 2026
+              Correio TEDA | Natal 2026
             </p>
           </div>
           {user && (

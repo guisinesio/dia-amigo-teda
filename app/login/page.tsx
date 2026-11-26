@@ -80,9 +80,9 @@ export default function LoginPage() {
         >
           {/* Faixa decorativa */}
           <div className="mb-5 flex items-center justify-center gap-2 rounded-2xl bg-brand-soft px-4 py-2">
-            <span className="text-sm">🎄</span>
+            {/* <span className="text-sm">🎄</span> */}
             <p className="text-xs font-semibold text-brand">Compartilhe o espírito do Natal</p>
-            <span className="text-sm">🎄</span>
+            {/* <span className="text-sm">🎄</span> */}
           </div>
 
           <h2 className="mb-1 text-lg font-semibold text-ink">Entrar</h2>
