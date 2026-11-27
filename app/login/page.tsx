@@ -118,7 +118,7 @@ export default function LoginPage() {
                   exit={{ opacity: 0 }}
                   className="rounded-2xl bg-accent-soft px-4 py-3 text-sm text-accent"
                 >
-                  {error} 🌟
+                  {error}
                 </motion.div>
               )}
             </AnimatePresence>
