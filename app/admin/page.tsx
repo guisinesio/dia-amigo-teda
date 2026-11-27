@@ -218,42 +218,89 @@ export default function AdminPage() {
                 {(() => {
                   const dias = stats.porDia.filter((d) => d.total > 0);
                   const n = dias.length;
-                  // Show label every N bars so they don't crowd on small screens.
-                  // Target: at most ~15 visible labels.
-                  const step = Math.ceil(n / 15);
-                  const BAR_MIN_PX = 20; // minimum bar width in px
+                  if (n === 0) return <p className="text-sm text-ink-faint">Nenhum dado disponível.</p>;
+
+                  // Y-axis: 3 reference lines at 25%, 50%, 100% of maxDia
+                  const yTicks = [
+                    { pct: 1, value: maxDia },
+                    { pct: 0.5, value: Math.round(maxDia * 0.5) },
+                    { pct: 0.25, value: Math.round(maxDia * 0.25) },
+                  ];
+                  const CHART_H = 120; // px for bars area
+
+                  // Show at most ~12 x-labels; always show first and last
+                  const step = n <= 12 ? 1 : Math.ceil(n / 12);
+                  // Cap bar width so few bars don't become too wide
+                  const barMaxPct = n <= 6 ? 6 : 100; // flex-basis cap via max-width
+
                   return (
-                    <div className="overflow-x-auto">
-                      <div
-                        className="flex items-end gap-1"
-                        style={{ minWidth: n * BAR_MIN_PX, height: 136 }}
-                      >
-                        {dias.map(({ data, total }, i) => {
-                          const h = Math.max(4, Math.round((total / maxDia) * 104));
-                          const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(data + "T12:00:00"));
-                          const showLabel = i === 0 || i === n - 1 || i % step === 0;
-                          return (
+                    <div className="flex gap-2">
+                      {/* Y-axis labels */}
+                      <div className="relative flex-shrink-0 pb-5" style={{ height: CHART_H + 20 }}>
+                        {yTicks.map(({ pct, value }) => (
+                          <span
+                            key={pct}
+                            className="absolute right-0 text-[9px] leading-none text-ink-faint"
+                            style={{ bottom: 20 + pct * CHART_H - 5 }}
+                          >
+                            {value}
+                          </span>
+                        ))}
+                      </div>
+
+                      {/* Chart area */}
+                      <div className="relative min-w-0 flex-1">
+                        {/* Y-axis grid lines */}
+                        <div className="absolute inset-x-0 bottom-5" style={{ height: CHART_H }}>
+                          {yTicks.map(({ pct }) => (
                             <div
-                              key={data}
-                              title={`${label}: ${total} msg`}
-                              className="group relative flex flex-1 flex-col items-center gap-1"
-                            >
-                              {/* Tooltip */}
-                              <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                {label} · {total}
-                              </span>
-                              <motion.div
-                                initial={{ height: 0 }}
-                                animate={{ height: h }}
-                                transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-                                className="w-full rounded-t-lg bg-brand"
-                              />
-                              <span className={`text-[9px] text-ink-faint ${showLabel ? "" : "invisible"}`}>
-                                {label}
-                              </span>
-                            </div>
-                          );
-                        })}
+                              key={pct}
+                              className="absolute inset-x-0 border-t border-dashed border-line"
+                              style={{ bottom: pct * CHART_H }}
+                            />
+                          ))}
+                        </div>
+
+                        {/* Bars */}
+                        <div
+                          className="relative flex items-end gap-0.5 pb-5"
+                          style={{ height: CHART_H + 20 }}
+                        >
+                          {dias.map(({ data, total }, i) => {
+                            const h = Math.max(3, Math.round((total / maxDia) * CHART_H));
+                            const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(data + "T12:00:00"));
+                            const showLabel = n <= 12 || i === 0 || i === n - 1 || i % step === 0;
+                            return (
+                              <div
+                                key={data}
+                                className="group relative flex flex-col items-center"
+                                style={{
+                                  flex: "1 1 0",
+                                  maxWidth: n <= 6 ? `${barMaxPct}%` : undefined,
+                                  height: CHART_H + 20,
+                                  justifyContent: "flex-end",
+                                }}
+                              >
+                                {/* Tooltip */}
+                                <span className="pointer-events-none absolute -top-7 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                  {label} · {total}
+                                </span>
+                                <motion.div
+                                  initial={{ height: 0 }}
+                                  animate={{ height: h }}
+                                  transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+                                  className="w-full rounded-t bg-brand"
+                                />
+                                <span
+                                  className="mt-1 text-[9px] leading-none text-ink-faint"
+                                  style={{ visibility: showLabel ? "visible" : "hidden" }}
+                                >
+                                  {label}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
                       </div>
                     </div>
                   );
@@ -261,40 +308,38 @@ export default function AdminPage() {
               </Card>
             </motion.div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              {/* Por setor */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-              >
-                <Card className="p-5">
-                  <h2 className="mb-4 text-sm font-semibold text-ink">Mensagens por setor</h2>
-                  <div className="flex flex-col gap-2.5">
-                    {stats.porSetor.sort((a, b) => b.total - a.total).slice(0, 8).map(({ setor, total }) => (
-                      <div key={setor}>
-                        <div className="mb-1 flex justify-between text-xs">
-                          <span className="text-ink-soft">{setor}</span>
-                          <span className="font-medium text-ink">{total}</span>
-                        </div>
-                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-mist">
-                          <motion.div
-                            initial={{ width: 0 }}
-                            animate={{ width: `${(total / maxSetor) * 100}%` }}
-                            transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
-                            className="h-full rounded-full bg-brand"
-                          />
-                        </div>
+            {/* Por setor — largura total */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              <Card className="p-5">
+                <h2 className="mb-4 text-sm font-semibold text-ink">Mensagens por setor</h2>
+                <div className="flex flex-col gap-2.5">
+                  {stats.porSetor.sort((a, b) => b.total - a.total).slice(0, 8).map(({ setor, total }) => (
+                    <div key={setor}>
+                      <div className="mb-1 flex justify-between text-xs">
+                        <span className="text-ink-soft">{setor}</span>
+                        <span className="font-medium text-ink">{total}</span>
                       </div>
-                    ))}
-                  </div>
-                </Card>
-              </motion.div>
-            </div>
+                      <div className="h-1.5 w-full overflow-hidden rounded-full bg-mist">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${(total / maxSetor) * 100}%` }}
+                          transition={{ duration: 0.7, ease: "easeOut", delay: 0.4 }}
+                          className="h-full rounded-full bg-brand"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </Card>
+            </motion.div>
 
+            {/* Rankings — lado a lado no desktop, empilhados no mobile */}
             <div className="grid gap-4 lg:grid-cols-2">
-
-              {/* Ranking  de participacao*/}
+              {/* Ranking de participação */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -323,36 +368,15 @@ export default function AdminPage() {
                 transition={{ delay: 0.45 }}
               >
                 <Card className="p-5">
-                  <h2 className="mb-4 text-sm font-semibold text-ink">
-                    Ranking de mensagens recebidas
-                  </h2>
-
+                  <h2 className="mb-4 text-sm font-semibold text-ink">Ranking de mensagens recebidas</h2>
                   <div className="flex flex-col gap-2">
                     {stats.rankingRecebidos.map(({ nome, total }, i) => (
-                      <div
-                        key={nome}
-                        className="flex items-center gap-3 rounded-xl p-2 hover:bg-mist transition-colors"
-                      >
-                        <span
-                          className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0
-                              ? "bg-[#FFD700] text-white"
-                              : i === 1
-                                ? "bg-[#C0C0C0] text-white"
-                                : i === 2
-                                  ? "bg-[#CD7F32] text-white"
-                                  : "bg-mist text-ink-faint"
-                            }`}
-                        >
+                      <div key={nome} className="flex items-center gap-3 rounded-xl p-2 hover:bg-mist transition-colors">
+                        <span className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-full text-xs font-bold ${i === 0 ? "bg-[#FFD700] text-white" : i === 1 ? "bg-[#C0C0C0] text-white" : i === 2 ? "bg-[#CD7F32] text-white" : "bg-mist text-ink-faint"}`}>
                           {i + 1}
                         </span>
-
-                        <span className="flex-1 text-sm text-ink">
-                          {nome}
-                        </span>
-
-                        <span className="text-sm font-semibold text-brand">
-                          {total} msgs
-                        </span>
+                        <span className="flex-1 text-sm text-ink">{nome}</span>
+                        <span className="text-sm font-semibold text-brand">{total} msgs</span>
                       </div>
                     ))}
                   </div>
