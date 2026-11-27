@@ -220,22 +220,32 @@ export default function AdminPage() {
                   const n = dias.length;
                   if (n === 0) return <p className="text-sm text-ink-faint">Nenhum dado disponível.</p>;
 
-                  // Y-axis: 3 reference lines at 25%, 50%, 100% of maxDia
-                  const yTicks = [
-                    { pct: 1, value: maxDia },
-                    { pct: 0.5, value: Math.round(maxDia * 0.5) },
+                  const CHART_H = 120;
+                  // Min px per bar on mobile so bars stay legible when scrolling
+                  const BAR_MIN_PX = 24;
+                  // Inner content minimum width — only kicks in when bars would be < BAR_MIN_PX
+                  const innerMinWidth = n * BAR_MIN_PX;
+
+                  // Y-axis ticks — deduplicate integer values to avoid repetition on small datasets
+                  const rawTicks = [
+                    { pct: 1,    value: maxDia },
+                    { pct: 0.5,  value: Math.round(maxDia * 0.5) },
                     { pct: 0.25, value: Math.round(maxDia * 0.25) },
                   ];
-                  const CHART_H = 120; // px for bars area
+                  const seen = new Set<number>();
+                  const yTicks = rawTicks.filter(({ value }) => {
+                    if (value <= 0 || seen.has(value)) return false;
+                    seen.add(value);
+                    return true;
+                  });
 
-                  // Show at most ~12 x-labels; always show first and last
+                  // X-labels: show all when ≤12 bars, otherwise thin out to ~12 labels
                   const step = n <= 12 ? 1 : Math.ceil(n / 12);
-                  // Cap bar width so few bars don't become too wide
-                  const barMaxPct = n <= 6 ? 6 : 100; // flex-basis cap via max-width
 
                   return (
-                    <div className="flex gap-2">
-                      {/* Y-axis labels */}
+                    // min-w-0 prevents this flex child from growing the card/page
+                    <div className="flex min-w-0 gap-2">
+                      {/* Y-axis labels — fixed, never scrolls */}
                       <div className="relative flex-shrink-0 pb-5" style={{ height: CHART_H + 20 }}>
                         {yTicks.map(({ pct, value }) => (
                           <span
@@ -248,58 +258,56 @@ export default function AdminPage() {
                         ))}
                       </div>
 
-                      {/* Chart area */}
-                      <div className="relative min-w-0 flex-1">
-                        {/* Y-axis grid lines */}
-                        <div className="absolute inset-x-0 bottom-5" style={{ height: CHART_H }}>
-                          {yTicks.map(({ pct }) => (
-                            <div
-                              key={pct}
-                              className="absolute inset-x-0 border-t border-dashed border-line"
-                              style={{ bottom: pct * CHART_H }}
-                            />
-                          ))}
-                        </div>
-
-                        {/* Bars */}
-                        <div
-                          className="relative flex items-end gap-0.5 pb-5"
-                          style={{ height: CHART_H + 20 }}
-                        >
-                          {dias.map(({ data, total }, i) => {
-                            const h = Math.max(3, Math.round((total / maxDia) * CHART_H));
-                            const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(data + "T12:00:00"));
-                            const showLabel = n <= 12 || i === 0 || i === n - 1 || i % step === 0;
-                            return (
+                      {/* Scroll wrapper — min-w-0 + overflow-x-auto keeps scroll contained */}
+                      <div className="relative min-w-0 flex-1 overflow-x-auto">
+                        {/* Inner content — minWidth ensures bars never get too thin on mobile */}
+                        <div className="relative" style={{ minWidth: innerMinWidth }}>
+                          {/* Y-axis grid lines (stretch full inner width) */}
+                          <div className="absolute inset-x-0 bottom-5" style={{ height: CHART_H }}>
+                            {yTicks.map(({ pct }) => (
                               <div
-                                key={data}
-                                className="group relative flex flex-col items-center"
-                                style={{
-                                  flex: "1 1 0",
-                                  maxWidth: n <= 6 ? `${barMaxPct}%` : undefined,
-                                  height: CHART_H + 20,
-                                  justifyContent: "flex-end",
-                                }}
-                              >
-                                {/* Tooltip */}
-                                <span className="pointer-events-none absolute -top-7 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                  {label} · {total}
-                                </span>
-                                <motion.div
-                                  initial={{ height: 0 }}
-                                  animate={{ height: h }}
-                                  transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-                                  className="w-full rounded-t bg-brand"
-                                />
-                                <span
-                                  className="mt-1 text-[9px] leading-none text-ink-faint"
-                                  style={{ visibility: showLabel ? "visible" : "hidden" }}
+                                key={pct}
+                                className="absolute inset-x-0 border-t border-dashed border-line"
+                                style={{ bottom: pct * CHART_H }}
+                              />
+                            ))}
+                          </div>
+
+                          {/* Bars row */}
+                          <div
+                            className="relative flex items-end gap-0.5 pb-5"
+                            style={{ height: CHART_H + 20 }}
+                          >
+                            {dias.map(({ data, total }, i) => {
+                              const h = Math.max(3, Math.round((total / maxDia) * CHART_H));
+                              const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(data + "T12:00:00"));
+                              const showLabel = i === 0 || i === n - 1 || i % step === 0;
+                              return (
+                                <div
+                                  key={data}
+                                  className="group relative flex flex-col items-center"
+                                  style={{ flex: "1 1 0", height: CHART_H + 20, justifyContent: "flex-end" }}
                                 >
-                                  {label}
-                                </span>
-                              </div>
-                            );
-                          })}
+                                  {/* Tooltip */}
+                                  <span className="pointer-events-none absolute -top-7 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                    {label} · {total}
+                                  </span>
+                                  <motion.div
+                                    initial={{ height: 0 }}
+                                    animate={{ height: h }}
+                                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+                                    className="w-full rounded-t bg-brand"
+                                  />
+                                  <span
+                                    className="mt-1 text-[9px] leading-none text-ink-faint"
+                                    style={{ visibility: showLabel ? "visible" : "hidden" }}
+                                  >
+                                    {label}
+                                  </span>
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       </div>
                     </div>
