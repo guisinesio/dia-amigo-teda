@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ChevronLeft, Download, Users, Mail, Eye, EyeOff, Camera, CheckCircle } from "lucide-react";
@@ -8,6 +8,185 @@ import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
 import { compressImage } from "@/lib/compress-image";
+
+// ---------------------------------------------------------------------------
+// DailyChart — interactive bar chart with hover/tap tooltip
+// ---------------------------------------------------------------------------
+const TOOLTIP_W = 148; // px — used for clamping
+
+function DailyChart({ dias, maxDia }: { dias: { data: string; total: number }[]; maxDia: number }) {
+  const [activeIdx, setActiveIdx] = useState<number | null>(null);
+  const [tooltipLeft, setTooltipLeft] = useState(0);
+  const touchStart = useRef<{ x: number; y: number } | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const n = dias.length;
+  const CHART_H = 120;
+  const BAR_MIN_PX = 24;
+  const innerMinWidth = n * BAR_MIN_PX;
+  const step = n <= 12 ? 1 : Math.ceil(n / 12);
+
+  const rawTicks = [
+    { pct: 1,    value: maxDia },
+    { pct: 0.5,  value: Math.round(maxDia * 0.5) },
+    { pct: 0.25, value: Math.round(maxDia * 0.25) },
+  ];
+  const seen = new Set<number>();
+  const yTicks = rawTicks.filter(({ value }) => {
+    if (value <= 0 || seen.has(value)) return false;
+    seen.add(value);
+    return true;
+  });
+
+  const positionTooltip = useCallback((barEl: HTMLElement) => {
+    if (!containerRef.current) return;
+    const barRect = barEl.getBoundingClientRect();
+    const containerRect = containerRef.current.getBoundingClientRect();
+    const barCenterX = barRect.left + barRect.width / 2 - containerRect.left;
+    const left = Math.max(0, Math.min(barCenterX - TOOLTIP_W / 2, containerRect.width - TOOLTIP_W));
+    setTooltipLeft(left);
+  }, []);
+
+  const closeTooltip = useCallback(() => setActiveIdx(null), []);
+
+  // Desktop: hover
+  const handleMouseEnter = useCallback((e: React.MouseEvent<HTMLDivElement>, idx: number) => {
+    setActiveIdx(idx);
+    positionTooltip(e.currentTarget);
+  }, [positionTooltip]);
+
+  // Desktop: keyboard focus
+  const handleFocus = useCallback((e: React.FocusEvent<HTMLDivElement>, idx: number) => {
+    setActiveIdx(idx);
+    positionTooltip(e.currentTarget);
+  }, [positionTooltip]);
+
+  // Mobile: tap detection (distinguish from scroll gesture)
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    touchStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  }, []);
+
+  const handleBarTouchEnd = useCallback((e: React.TouchEvent<HTMLDivElement>, idx: number) => {
+    if (!touchStart.current) return;
+    const dx = Math.abs(e.changedTouches[0].clientX - touchStart.current.x);
+    const dy = Math.abs(e.changedTouches[0].clientY - touchStart.current.y);
+    touchStart.current = null;
+    if (dx > 10 || dy > 10) return; // scroll gesture — ignore
+    e.preventDefault();
+    if (activeIdx === idx) {
+      setActiveIdx(null);
+    } else {
+      setActiveIdx(idx);
+      positionTooltip(e.currentTarget);
+    }
+  }, [activeIdx, positionTooltip]);
+
+  const activeDia = activeIdx !== null ? dias[activeIdx] : null;
+  const activeFormatted = activeDia
+    ? new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(
+        new Date(activeDia.data + "T12:00:00")
+      )
+    : null;
+
+  if (n === 0) return <p className="text-sm text-ink-faint">Nenhum dado disponível.</p>;
+
+  return (
+    // pt-14 reserves space above the chart for the floating tooltip
+    <div ref={containerRef} className="relative pt-14" onMouseLeave={closeTooltip}>
+      {/* Tooltip — rendered in outer container, never clipped by scroll overflow */}
+      {activeDia && activeFormatted && (
+        <div
+          className="pointer-events-none absolute top-0 z-20 rounded-xl bg-ink px-3 py-2 text-center shadow-lg"
+          style={{ left: tooltipLeft, width: TOOLTIP_W }}
+        >
+          <p className="text-[11px] font-medium text-white/70">{activeFormatted}</p>
+          <p className="text-sm font-bold text-white">
+            {activeDia.total} {activeDia.total === 1 ? "mensagem" : "mensagens"}
+          </p>
+        </div>
+      )}
+
+      <div className="flex min-w-0 gap-2">
+        {/* Y-axis labels — fixed, never scrolls */}
+        <div className="relative flex-shrink-0 pb-5" style={{ height: CHART_H + 20 }}>
+          {yTicks.map(({ pct, value }) => (
+            <span
+              key={pct}
+              className="absolute right-0 text-[9px] leading-none text-ink-faint"
+              style={{ bottom: 20 + pct * CHART_H - 5 }}
+            >
+              {value}
+            </span>
+          ))}
+        </div>
+
+        {/* Scroll wrapper — min-w-0 + overflow-x-auto keeps scroll contained */}
+        <div
+          className="relative min-w-0 flex-1 overflow-x-auto"
+          onClick={closeTooltip}
+        >
+          <div className="relative" style={{ minWidth: innerMinWidth }}>
+            {/* Y-axis grid lines */}
+            <div className="absolute inset-x-0 bottom-5" style={{ height: CHART_H }}>
+              {yTicks.map(({ pct }) => (
+                <div
+                  key={pct}
+                  className="absolute inset-x-0 border-t border-dashed border-line"
+                  style={{ bottom: pct * CHART_H }}
+                />
+              ))}
+            </div>
+
+            {/* Bars */}
+            <div
+              className="relative flex items-end gap-0.5 pb-5"
+              style={{ height: CHART_H + 20 }}
+              onTouchStart={handleTouchStart}
+            >
+              {dias.map(({ data, total }, i) => {
+                const h = Math.max(3, Math.round((total / maxDia) * CHART_H));
+                const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(
+                  new Date(data + "T12:00:00")
+                );
+                const showLabel = i === 0 || i === n - 1 || i % step === 0;
+                const isActive = activeIdx === i;
+                return (
+                  <div
+                    key={data}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`${label}: ${total} ${total === 1 ? "mensagem" : "mensagens"}`}
+                    className="relative flex flex-col items-center outline-none"
+                    style={{ flex: "1 1 0", height: CHART_H + 20, justifyContent: "flex-end" }}
+                    onMouseEnter={(e) => handleMouseEnter(e, i)}
+                    onFocus={(e) => handleFocus(e, i)}
+                    onBlur={closeTooltip}
+                    onTouchEnd={(e) => handleBarTouchEnd(e, i)}
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: h }}
+                      transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+                      className="w-full rounded-t transition-colors duration-150"
+                      style={{ backgroundColor: isActive ? "var(--color-brand-dark, #9b1630)" : "var(--color-brand, #c41e3a)" }}
+                    />
+                    <span
+                      className="mt-1 text-[9px] leading-none text-ink-faint"
+                      style={{ visibility: showLabel ? "visible" : "hidden" }}
+                    >
+                      {label}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 interface Colaborador {
   matricula: string;
@@ -215,104 +394,7 @@ export default function AdminPage() {
             >
               <Card className="p-5">
                 <h2 className="mb-4 text-sm font-semibold text-ink">Mensagens por dia</h2>
-                {(() => {
-                  const dias = stats.porDia.filter((d) => d.total > 0);
-                  const n = dias.length;
-                  if (n === 0) return <p className="text-sm text-ink-faint">Nenhum dado disponível.</p>;
-
-                  const CHART_H = 120;
-                  // Min px per bar on mobile so bars stay legible when scrolling
-                  const BAR_MIN_PX = 24;
-                  // Inner content minimum width — only kicks in when bars would be < BAR_MIN_PX
-                  const innerMinWidth = n * BAR_MIN_PX;
-
-                  // Y-axis ticks — deduplicate integer values to avoid repetition on small datasets
-                  const rawTicks = [
-                    { pct: 1,    value: maxDia },
-                    { pct: 0.5,  value: Math.round(maxDia * 0.5) },
-                    { pct: 0.25, value: Math.round(maxDia * 0.25) },
-                  ];
-                  const seen = new Set<number>();
-                  const yTicks = rawTicks.filter(({ value }) => {
-                    if (value <= 0 || seen.has(value)) return false;
-                    seen.add(value);
-                    return true;
-                  });
-
-                  // X-labels: show all when ≤12 bars, otherwise thin out to ~12 labels
-                  const step = n <= 12 ? 1 : Math.ceil(n / 12);
-
-                  return (
-                    // min-w-0 prevents this flex child from growing the card/page
-                    <div className="flex min-w-0 gap-2">
-                      {/* Y-axis labels — fixed, never scrolls */}
-                      <div className="relative flex-shrink-0 pb-5" style={{ height: CHART_H + 20 }}>
-                        {yTicks.map(({ pct, value }) => (
-                          <span
-                            key={pct}
-                            className="absolute right-0 text-[9px] leading-none text-ink-faint"
-                            style={{ bottom: 20 + pct * CHART_H - 5 }}
-                          >
-                            {value}
-                          </span>
-                        ))}
-                      </div>
-
-                      {/* Scroll wrapper — min-w-0 + overflow-x-auto keeps scroll contained */}
-                      <div className="relative min-w-0 flex-1 overflow-x-auto">
-                        {/* Inner content — minWidth ensures bars never get too thin on mobile */}
-                        <div className="relative" style={{ minWidth: innerMinWidth }}>
-                          {/* Y-axis grid lines (stretch full inner width) */}
-                          <div className="absolute inset-x-0 bottom-5" style={{ height: CHART_H }}>
-                            {yTicks.map(({ pct }) => (
-                              <div
-                                key={pct}
-                                className="absolute inset-x-0 border-t border-dashed border-line"
-                                style={{ bottom: pct * CHART_H }}
-                              />
-                            ))}
-                          </div>
-
-                          {/* Bars row */}
-                          <div
-                            className="relative flex items-end gap-0.5 pb-5"
-                            style={{ height: CHART_H + 20 }}
-                          >
-                            {dias.map(({ data, total }, i) => {
-                              const h = Math.max(3, Math.round((total / maxDia) * CHART_H));
-                              const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(data + "T12:00:00"));
-                              const showLabel = i === 0 || i === n - 1 || i % step === 0;
-                              return (
-                                <div
-                                  key={data}
-                                  className="group relative flex flex-col items-center"
-                                  style={{ flex: "1 1 0", height: CHART_H + 20, justifyContent: "flex-end" }}
-                                >
-                                  {/* Tooltip */}
-                                  <span className="pointer-events-none absolute -top-7 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
-                                    {label} · {total}
-                                  </span>
-                                  <motion.div
-                                    initial={{ height: 0 }}
-                                    animate={{ height: h }}
-                                    transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-                                    className="w-full rounded-t bg-brand"
-                                  />
-                                  <span
-                                    className="mt-1 text-[9px] leading-none text-ink-faint"
-                                    style={{ visibility: showLabel ? "visible" : "hidden" }}
-                                  >
-                                    {label}
-                                  </span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
+                <DailyChart dias={stats.porDia.filter((d) => d.total > 0)} maxDia={maxDia} />
               </Card>
             </motion.div>
 
