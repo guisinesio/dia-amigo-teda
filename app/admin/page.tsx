@@ -207,40 +207,61 @@ export default function AdminPage() {
               ))}
             </motion.div>
 
-            <div className="grid gap-4 lg:grid-cols-2">
-              {/* Mensagens por dia */}
-              <motion.div
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.2 }}
-              >
-                <Card className="p-5">
-                  <h2 className="mb-4 text-sm font-semibold text-ink">Mensagens por dia</h2>
-                  <div className="flex items-end gap-1.5" style={{ height: 120 }}>
-                    {stats.porDia.map(({ data, total }) => {
-                      const h = Math.max(4, Math.round((total / maxDia) * 104));
-                      const d = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(data + "T12:00:00"));
-                      return (
-                        <div key={data} className="group flex flex-1 flex-col items-center gap-1">
-                          <div className="relative flex w-full justify-center">
-                            <span className="absolute -top-6 hidden rounded bg-ink px-1.5 py-0.5 text-[10px] text-white group-hover:block">
-                              {total}
-                            </span>
-                          </div>
-                          <motion.div
-                            initial={{ height: 0 }}
-                            animate={{ height: h }}
-                            transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
-                            className="w-full rounded-t-lg bg-brand"
-                          />
-                          <span className="text-[9px] text-ink-faint">{d}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </Card>
-              </motion.div>
+            {/* Mensagens por dia — largura total */}
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className="p-5">
+                <h2 className="mb-4 text-sm font-semibold text-ink">Mensagens por dia</h2>
+                {(() => {
+                  const dias = stats.porDia.filter((d) => d.total > 0);
+                  const n = dias.length;
+                  // Show label every N bars so they don't crowd on small screens.
+                  // Target: at most ~15 visible labels.
+                  const step = Math.ceil(n / 15);
+                  const BAR_MIN_PX = 20; // minimum bar width in px
+                  return (
+                    <div className="overflow-x-auto">
+                      <div
+                        className="flex items-end gap-1"
+                        style={{ minWidth: n * BAR_MIN_PX, height: 136 }}
+                      >
+                        {dias.map(({ data, total }, i) => {
+                          const h = Math.max(4, Math.round((total / maxDia) * 104));
+                          const label = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(data + "T12:00:00"));
+                          const showLabel = i === 0 || i === n - 1 || i % step === 0;
+                          return (
+                            <div
+                              key={data}
+                              title={`${label}: ${total} msg`}
+                              className="group relative flex flex-1 flex-col items-center gap-1"
+                            >
+                              {/* Tooltip */}
+                              <span className="pointer-events-none absolute -top-8 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap rounded bg-ink px-1.5 py-0.5 text-[10px] text-white opacity-0 transition-opacity group-hover:opacity-100">
+                                {label} · {total}
+                              </span>
+                              <motion.div
+                                initial={{ height: 0 }}
+                                animate={{ height: h }}
+                                transition={{ duration: 0.6, ease: "easeOut", delay: 0.3 }}
+                                className="w-full rounded-t-lg bg-brand"
+                              />
+                              <span className={`text-[9px] text-ink-faint ${showLabel ? "" : "invisible"}`}>
+                                {label}
+                              </span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
+              </Card>
+            </motion.div>
 
+            <div className="grid gap-4 lg:grid-cols-2">
               {/* Por setor */}
               <motion.div
                 initial={{ opacity: 0, y: 16 }}
