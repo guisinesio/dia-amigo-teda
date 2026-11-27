@@ -5,6 +5,8 @@ interface AvatarProps {
   name: string;
   size?: "sm" | "md" | "lg";
   className?: string;
+  /** Set to true for above-the-fold avatars (e.g. profile page hero). Default: lazy. */
+  eager?: boolean;
 }
 
 const sizes = {
@@ -20,13 +22,15 @@ function initials(name: string) {
   return (first + last).toUpperCase();
 }
 
-export function Avatar({ src, name, size = "md", className }: AvatarProps) {
+export function Avatar({ src, name, size = "md", className, eager = false }: AvatarProps) {
   if (src) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         src={src}
         alt={name}
+        loading={eager ? "eager" : "lazy"}
+        decoding="async"
         className={cn("rounded-full object-cover bg-mist", sizes[size], className)}
       />
     );

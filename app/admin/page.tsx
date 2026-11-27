@@ -7,6 +7,7 @@ import { ChevronLeft, Download, Users, Mail, Eye, EyeOff, Camera, CheckCircle } 
 import { Button } from "@/components/ui/Button";
 import { Card } from "@/components/ui/Card";
 import { Spinner } from "@/components/ui/Spinner";
+import { compressImage } from "@/lib/compress-image";
 
 interface Colaborador {
   matricula: string;
@@ -23,8 +24,9 @@ function FotoUpload({ colaborador, onDone }: { colaborador: Colaborador; onDone:
   const handleFile = async (file: File) => {
     setUploading(true);
     try {
+      const compressed = await compressImage(file);
       const form = new FormData();
-      form.append("file", file);
+      form.append("file", compressed);
       const res = await fetch(`/api/fotos/${colaborador.matricula}`, { method: "POST", body: form });
       const json = await res.json();
       if (json.ok) { setDone(true); onDone(json.data.url); }

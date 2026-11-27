@@ -68,6 +68,7 @@ export default function PerfilPage() {
                   src={driveImageUrl(perfil?.fotoDriveId)}
                   name={perfil?.nome ?? user?.nome ?? ""}
                   size="lg"
+                  eager
                 />
                 <div>
                   <h2 className="text-lg font-bold text-ink">{perfil?.nome ?? user?.nome}</h2>
