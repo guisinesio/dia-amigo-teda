@@ -217,7 +217,7 @@ export default function AdminPage() {
                 <Card className="p-5">
                   <h2 className="mb-4 text-sm font-semibold text-ink">Mensagens por dia</h2>
                   <div className="flex items-end gap-1.5" style={{ height: 120 }}>
-                    {stats.porDia.slice(-14).map(({ data, total }) => {
+                    {stats.porDia.map(({ data, total }) => {
                       const h = Math.max(4, Math.round((total / maxDia) * 104));
                       const d = new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit" }).format(new Date(data + "T12:00:00"));
                       return (
