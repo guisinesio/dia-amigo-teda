@@ -116,7 +116,7 @@ export function MainShell({ children }: { children: React.ReactNode }) {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: "easeOut" }}
-        className="flex flex-1 flex-col overflow-hidden pb-16 lg:h-full lg:pb-0"
+        className="flex min-h-0 flex-1 flex-col overflow-hidden pb-16 lg:h-full lg:pb-0"
       >
         {children}
       </motion.main>

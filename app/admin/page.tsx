@@ -151,7 +151,7 @@ export default function AdminPage() {
   const maxSetor = Math.max(...(stats?.porSetor.map((s) => s.total) ?? [1]));
 
   return (
-    <div className="min-h-svh bg-mist">
+    <div className="h-svh overflow-y-auto bg-mist">
       {/* Header */}
       <header className="border-b border-line bg-paper px-5 py-4 lg:px-8">
         <div className="mx-auto flex max-w-5xl items-center justify-between">

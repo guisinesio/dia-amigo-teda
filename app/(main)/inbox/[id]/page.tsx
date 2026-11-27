@@ -104,7 +104,7 @@ export default function MensagemPage({ params }: { params: Promise<{ id: string 
         </button>
       </div>
 
-      <div className="flex flex-1 flex-col overflow-y-auto">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
         <AnimatePresence mode="wait">
           {showEnvelope ? (
             <motion.div key="envelope" className="flex flex-1 flex-col">

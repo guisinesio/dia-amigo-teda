@@ -31,7 +31,7 @@ export default function InicioPage() {
   const primeiroNome = user?.nome.split(" ")[0] ?? "";
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       {/* Banner natalino */}
       <div
         className="relative overflow-hidden px-5 pb-7 pt-8 lg:px-8 lg:pt-10"

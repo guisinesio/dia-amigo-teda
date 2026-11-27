@@ -92,7 +92,7 @@ export default function NovaMensagemPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto">
+    <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
       {/* Header */}
       <div className="border-b border-line bg-paper px-5 py-5 lg:px-8">
         <div className="flex items-center gap-2">
